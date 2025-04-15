@@ -16,7 +16,7 @@
 
 //! Global database manager related declarations.
 
-use super::{ConnectionConfig, area::{Area, AreaDB}};
+use super::{ConnectionConfig, area::{Area, AreaDB}, dump_db, restore_db};
 use std::collections::HashMap;
 use sqlx::MySqlPool;
 
@@ -57,14 +57,15 @@ impl GlobalDB {
     ///
     /// # Parameters
     /// - `area_db` - given database manager.
-    /// - `config`  - given MySQL connection config.
     ///
     /// # Returns
     /// - `Ok` - in case of success.
     /// - `sqlx::Error` - otherwise.
-    pub async fn insert(&mut self, area_db: AreaDB, config: &ConnectionConfig)
+    pub async fn insert(&mut self, area_db: AreaDB)
         -> Result<(), sqlx::Error>
     {
+        let config = &area_db.config();
+
         // Create database if not exists.
         if let Some(pool) = &self.pool {
             let query = format!(
@@ -88,6 +89,48 @@ impl GlobalDB {
         manager.connect(url.as_str()).await?;
 
         self.table.insert(manager.area(), manager);
+        Ok(())
+    }
+
+    /// Dump database by specific area.
+    ///
+    /// # Parameters
+    /// - `area` - given manager area.
+    ///
+    /// # Returns
+    /// - `Ok` - in case of success.
+    /// - `sqlx::Error` - otherwise.
+    pub fn dump_db_by_area(&self, area: &Area) -> Result<(), sqlx::Error> {
+        // Check if area is correct.
+        if !self.table.contains_key(area) {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        let area_db   = self.table.get(area).unwrap();
+        let dump_name = format!("{}_backup.sql", area_db.name());
+
+        dump_db(&area_db.config(), dump_name)?;
+        Ok(())
+    }
+
+    /// Restore database by specific area.
+    ///
+    /// # Parameters
+    /// - `area` - given manager area.
+    ///
+    /// # Returns
+    /// - `Ok` - in case of success.
+    /// - `sqlx::Error` - otherwise.
+    pub fn restore_db_by_area(&self, area: &Area) -> Result<(), sqlx::Error> {
+        // Check if area is correct.
+        if !self.table.contains_key(area) {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        let area_db   = self.table.get(area).unwrap();
+        let dump_name = format!("{}_backup.sql", area_db.name());
+
+        restore_db(&area_db.config(), dump_name)?;
         Ok(())
     }
 }
