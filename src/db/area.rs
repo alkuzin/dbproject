@@ -16,7 +16,7 @@
 
 //! Area-specific database manager related declarations.
 
-use crate::chat::User;
+use crate::{db::ConnectionConfig, chat::User};
 use sqlx::MySqlPool;
 
 /// Area enumeration.
@@ -32,8 +32,8 @@ pub enum Area {
 pub struct AreaDB {
     /// Manager MySQL connection pool.
     pool: Option<MySqlPool>,
-    /// Manager name.
-    name: &'static str,
+    /// Connection config associated with AreaDB.
+    config: ConnectionConfig,
     /// Manager area.
     area: Area,
     // TODO: implement Tables struct to contain chat tables
@@ -45,16 +45,16 @@ impl AreaDB {
     /// Construct new AreaDB object.
     ///
     /// # Parameters
-    /// - `name` - given manager name.
-    /// - `area` - given manager area.
+    /// - `config` - given MySQL connection config.
+    /// - `area`   - given manager area.
     ///
     /// # Returns
     /// - New `AreaDB` object.
-    pub fn new(name: &'static str, area: Area) -> Self {
+    pub fn new(config: ConnectionConfig, area: Area) -> Self {
         let mut area_db = AreaDB::default();
 
-        area_db.name = name;
-        area_db.area = area;
+        area_db.config = config;
+        area_db.area   = area;
         area_db
     }
 
@@ -71,6 +71,15 @@ impl AreaDB {
         Ok(())
     }
 
+    /// Get manager config.
+    ///
+    /// # Returns
+    /// - Manager area connection config.
+    #[inline(always)]
+    pub fn config(&self) -> ConnectionConfig {
+        self.config
+    }
+
     /// Get manager area.
     ///
     /// # Returns
@@ -78,5 +87,14 @@ impl AreaDB {
     #[inline(always)]
     pub fn area(&self) -> Area {
         self.area
+    }
+
+    /// Get manager db name.
+    ///
+    /// # Returns
+    /// - Manager area database name.
+    #[inline(always)]
+    pub fn name(&self) -> &'static str {
+        self.config.database
     }
 }
