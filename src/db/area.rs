@@ -76,8 +76,8 @@ impl AreaDB {
     /// # Returns
     /// - Manager area connection config.
     #[inline(always)]
-    pub fn config(&self) -> ConnectionConfig {
-        self.config
+    pub fn config(&self) -> &ConnectionConfig {
+        &self.config
     }
 
     /// Get manager area.
@@ -94,7 +94,7 @@ impl AreaDB {
     /// # Returns
     /// - Manager area database name.
     #[inline(always)]
-    pub fn name(&self) -> &'static str {
-        self.config.database
+    pub fn name(&self) -> &String {
+        &self.config.database
     }
 }

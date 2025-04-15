@@ -24,18 +24,18 @@ pub mod global;
 pub mod area;
 
 /// MySQL connection config struct.
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ConnectionConfig {
     /// MySQL username.
-    pub username: &'static str,
+    pub username: String,
     /// MySQL user password.
-    pub password: &'static str,
+    pub password: String,
     /// Connection host.
-    pub host: &'static str,
+    pub host: String,
     /// Connection port.
     pub port: u16,
     /// MySQL database name.
-    pub database: &'static str,
+    pub database: String,
 }
 
 impl ConnectionConfig {
@@ -51,11 +51,11 @@ impl ConnectionConfig {
     /// # Returns
     /// - New `ConnectionConfig` object.
     pub fn new(
-        username: &'static str,
-        password: &'static str,
-        host: &'static str,
+        username: String,
+        password: String,
+        host: String,
         port: u16,
-        database: &'static str
+        database: String
     ) -> Self {
         Self {
             username,
@@ -112,12 +112,14 @@ pub trait CrudOps {
 /// # Returns
 /// - `Ok`  - in case of success.
 /// - `Err` - otherwise.
-pub fn dump_db(config: &ConnectionConfig, filename: String) -> Result<(), io::Error> {
+pub fn dump_db(config: &ConnectionConfig, filename: &String)
+    -> Result<(), io::Error>
+{
     let _ = Command::new("mysqldump")
         .arg("-u")
-        .arg(config.username)
+        .arg(config.username.as_str())
         .arg(format!("-p{}", config.password))
-        .arg(config.database)
+        .arg(config.database.as_str())
         .arg("--result-file")
         .arg(filename)
         .output()?;
@@ -134,12 +136,14 @@ pub fn dump_db(config: &ConnectionConfig, filename: String) -> Result<(), io::Er
 /// # Returns
 /// - `Ok`  - in case of success.
 /// - `Err` - otherwise.
-pub fn restore_db(config: &ConnectionConfig, filename: String) -> Result<(), io::Error> {
+pub fn restore_db(config: &ConnectionConfig, filename: &String)
+    -> Result<(), io::Error>
+{
     let _ = Command::new("mysql")
         .arg("-u")
-        .arg(config.username)
+        .arg(config.username.as_str())
         .arg(format!("-p{}", config.password))
-        .arg(config.database)
+        .arg(config.database.as_str())
         .arg("<")
         .arg(filename)
         .output()?;

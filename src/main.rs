@@ -26,11 +26,11 @@ use db::{ConnectionConfig, global::GlobalDB, area::{Area, AreaDB}};
 /// - `sqlx::Error` - otherwise.
 async fn setup_db() -> Result<(), sqlx::Error> {
     let global_config = ConnectionConfig::new(
-        "test",
-        "12345",
-        "localhost",
+        "test".to_string(),
+        "12345".to_string(),
+        "localhost".to_string(),
         3306,
-        ""
+        "".to_string(),
     );
 
     // Set global database manager.
@@ -38,12 +38,13 @@ async fn setup_db() -> Result<(), sqlx::Error> {
     global_db.connect(&global_config).await?;
 
     let mut rus_area_config  = global_config.clone();
-    rus_area_config.database = "AreaDB_Russia";
+    rus_area_config.database = "AreaDB_Russia".to_string();
 
     // Set area-specific database managers.
     let russia_area_db = AreaDB::new(rus_area_config, Area::Russia);
     global_db.insert(russia_area_db).await?;
 
+    global_db.dump_db_by_area(&Area::Russia).await?;
     Ok(())
 }
 
