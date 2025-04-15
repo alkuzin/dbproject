@@ -53,24 +53,20 @@ impl GlobalDB {
         Ok(())
     }
 
-    /// Insert area-specific database manager.
+    /// Create new database.
     ///
     /// # Parameters
-    /// - `area_db` - given database manager.
+    /// - `name` - given database name.
     ///
     /// # Returns
     /// - `Ok` - in case of success.
     /// - `sqlx::Error` - otherwise.
-    pub async fn insert(&mut self, area_db: AreaDB)
-        -> Result<(), sqlx::Error>
-    {
-        let config = &area_db.config();
-
+    pub async fn create_db(&self, name: &String) -> Result<(), sqlx::Error> {
         // Create database if not exists.
         if let Some(pool) = &self.pool {
             let query = format!(
                 "CREATE DATABASE IF NOT EXISTS {}",
-                config.database
+                name
             );
 
             sqlx::query(query.as_str()).execute(pool).await?;
@@ -84,6 +80,23 @@ impl GlobalDB {
             return Err(sqlx::Error::PoolClosed)
         }
 
+        Ok(())
+    }
+
+    /// Insert area-specific database manager.
+    ///
+    /// # Parameters
+    /// - `area_db` - given database manager.
+    ///
+    /// # Returns
+    /// - `Ok` - in case of success.
+    /// - `sqlx::Error` - otherwise.
+    pub async fn insert(&mut self, area_db: AreaDB)
+        -> Result<(), sqlx::Error>
+    {
+        let config = &area_db.config().clone();
+        self.create_db(&config.database).await?;
+
         let mut manager = area_db;
         let url = config.url();
         manager.connect(url.as_str()).await?;
@@ -91,6 +104,7 @@ impl GlobalDB {
         self.table.insert(manager.area(), manager);
         Ok(())
     }
+
 
     /// Dump database by specific area.
     ///
@@ -100,7 +114,9 @@ impl GlobalDB {
     /// # Returns
     /// - `Ok` - in case of success.
     /// - `sqlx::Error` - otherwise.
-    pub fn dump_db_by_area(&self, area: &Area) -> Result<(), sqlx::Error> {
+    pub async fn dump_db_by_area(&self, area: &Area)
+        -> Result<(), sqlx::Error>
+    {
         // Check if area is correct.
         if !self.table.contains_key(area) {
             return Err(sqlx::Error::RowNotFound);
@@ -109,7 +125,15 @@ impl GlobalDB {
         let area_db   = self.table.get(area).unwrap();
         let dump_name = format!("{}_backup.sql", area_db.name());
 
-        dump_db(&area_db.config(), dump_name)?;
+        dump_db(&area_db.config(), &dump_name)?;
+
+        // Store backup on current server.
+        let mut config  = area_db.config().clone();
+        config.database = format!("{}_BACKUP", config.database);
+
+        self.create_db(&config.database).await?;
+        restore_db(&config, &dump_name)?;
+
         Ok(())
     }
 
@@ -121,7 +145,7 @@ impl GlobalDB {
     /// # Returns
     /// - `Ok` - in case of success.
     /// - `sqlx::Error` - otherwise.
-    pub fn restore_db_by_area(&self, area: &Area) -> Result<(), sqlx::Error> {
+    pub async fn restore_db_by_area(&self, area: &Area) -> Result<(), sqlx::Error> {
         // Check if area is correct.
         if !self.table.contains_key(area) {
             return Err(sqlx::Error::RowNotFound);
@@ -130,7 +154,7 @@ impl GlobalDB {
         let area_db   = self.table.get(area).unwrap();
         let dump_name = format!("{}_backup.sql", area_db.name());
 
-        restore_db(&area_db.config(), dump_name)?;
+        restore_db(&area_db.config(), &dump_name)?;
         Ok(())
     }
 }
