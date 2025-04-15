@@ -16,6 +16,8 @@
 
 //! Main database declarations module.
 
+use std::process::Command;
+use std::io;
 use sqlx::MySqlPool;
 
 pub mod global;
@@ -99,4 +101,48 @@ pub trait CrudOps {
     fn create(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
     fn update(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
     fn delete(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
+}
+
+/// Dump database into specific file.
+///
+/// # Parameters
+/// - `config`   - given MySQL connection config.
+/// - `filename` - given database dump file name.
+///
+/// # Returns
+/// - `Ok`  - in case of success.
+/// - `Err` - otherwise.
+pub fn dump_db(config: &ConnectionConfig, filename: String) -> Result<(), io::Error> {
+    let _ = Command::new("mysqldump")
+        .arg("-u")
+        .arg(config.username)
+        .arg(format!("-p{}", config.password))
+        .arg(config.database)
+        .arg("--result-file")
+        .arg(filename)
+        .output()?;
+
+    Ok(())
+}
+
+/// Restore database from specific file.
+///
+/// # Parameters
+/// - `config`   - given MySQL connection config.
+/// - `filename` - given database dump file name.
+///
+/// # Returns
+/// - `Ok`  - in case of success.
+/// - `Err` - otherwise.
+pub fn restore_db(config: &ConnectionConfig, filename: String) -> Result<(), io::Error> {
+    let _ = Command::new("mysql")
+        .arg("-u")
+        .arg(config.username)
+        .arg(format!("-p{}", config.password))
+        .arg(config.database)
+        .arg("<")
+        .arg(filename)
+        .output()?;
+
+    Ok(())
 }
