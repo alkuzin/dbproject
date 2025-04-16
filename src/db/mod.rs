@@ -16,8 +16,7 @@
 
 //! Main database declarations module.
 
-use std::process::Command;
-use std::io;
+use std::{process::Command, io};
 use sqlx::MySqlPool;
 
 pub mod global;
@@ -98,9 +97,9 @@ impl ConnectionConfig {
 
 /// CRUD (Create, Read, Update, Delete) operations trait.
 pub trait CrudOps {
-    fn create(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
-    fn update(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
-    fn delete(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error>;
+    async fn update(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
+    async fn delete(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
 }
 
 /// Dump database into specific file.
@@ -147,6 +146,24 @@ pub fn restore_db(config: &ConnectionConfig, filename: &String)
         .arg("<")
         .arg(filename)
         .output()?;
+
+    Ok(())
+}
+
+/// Create new table.
+///
+/// # Parameters
+/// - `pool` - given MySQL connection pool.
+/// - `name` - given table name.
+///
+/// # Returns
+/// - `Ok` - in case of success.
+/// - `sqlx::Error` - otherwise.
+pub async fn create_table(pool: &MySqlPool, name: &String, content: &String)
+    -> Result<(), sqlx::Error>
+{
+    let query = format!("CREATE TABLE IF NOT EXISTS {} ({});", name, content);
+    sqlx::query(query.as_str()).execute(pool).await?;
 
     Ok(())
 }
