@@ -18,6 +18,7 @@
 
 use crate::{db::ConnectionConfig, chat::create_db_tables};
 use sqlx::MySqlPool;
+use crate::chat::fill_db_tables;
 
 /// Area enumeration.
 #[derive(Debug, Default, Hash, Eq, PartialEq, Copy, Clone)]
@@ -66,6 +67,7 @@ impl AreaDB {
     pub async fn connect(&mut self, url: &str) -> Result<(), sqlx::Error> {
         let pool = MySqlPool::connect(url).await?;
         create_db_tables(&pool).await?;
+        fill_db_tables(&pool, 1).await?;
         self.pool = Some(pool);
 
         Ok(())

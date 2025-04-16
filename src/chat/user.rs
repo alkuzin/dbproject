@@ -55,7 +55,7 @@ impl CrudOps for User {
 
         create_table(pool, &name, &content.to_string()).await?;
 
-        println!("Created table: User");
+        println!("Created table: {name}");
         Ok(())
     }
 
@@ -92,6 +92,154 @@ impl CrudOps for User {
             .bind(&self.email)
             .bind(self.created_at.unwrap().to_string())
             .bind(self.last_login.unwrap().to_string())
+            .execute(pool)
+            .await?;
+
+        Ok(())
+    }
+}
+
+/// ChannelUser table.
+#[derive(Debug, Default)]
+pub struct ChannelUser {
+    /// Channel user identifier.
+    channel_user_id: i64,
+    /// Channel identifier.
+    channel_id: i64,
+    /// User identifier.
+    user_id: i64,
+    /// Date when the user joined the channel.
+    joined_at: Option<NaiveDate>,
+    /// Role of the user in the channel.
+    role: String,
+}
+
+impl CrudOps for ChannelUser {
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let name = "Channel_Users".to_string();
+        let content = String::from(
+            r#"
+            channel_user_id BIGINT,
+            channel_id BIGINT AUTO_INCREMENT UNIQUE,
+            user_id BIGINT,
+            joined_at DATE,
+            role TEXT,
+            PRIMARY KEY(channel_user_id)
+            "#
+        );
+
+        create_table(pool, &name, &content.to_string()).await?;
+
+        println!("Created table: {name}");
+        Ok(())
+    }
+
+    async fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn fill_random(&mut self, pool: &MySqlPool)
+                         -> Result<(), sqlx::Error>
+    {
+        let mut rng = rand::thread_rng();
+
+        // Generate random values.
+        self.channel_user_id = rng.gen_range(1..10000);
+        self.channel_id = rng.gen_range(1..10000);
+        self.user_id = rng.gen_range(1..10000);
+        self.joined_at = Some(NaiveDate::from_ymd_opt(2025, 1, 1).unwrap());
+        self.role = format!("role_{}", rng.gen_range(1..5)); // Random role assignment.
+
+        // Insert the new channel user into the database.
+        sqlx::query(
+            r#"
+            INSERT INTO Channel_Users
+            (channel_user_id, channel_id, user_id, joined_at, role)
+            VALUES (?, ?, ?, ?, ?)
+            "#,
+        )
+            .bind(self.channel_user_id)
+            .bind(self.channel_id)
+            .bind(self.user_id)
+            .bind(self.joined_at.unwrap().to_string())
+            .bind(&self.role)
+            .execute(pool)
+            .await?;
+
+        Ok(())
+    }
+}
+
+/// UserProfile table.
+#[derive(Debug, Default)]
+pub struct UserProfile {
+    /// Profile identifier.
+    profile_id: i64,
+    /// User identifier associated with the profile.
+    user_id: i64,
+    /// Biography of the user.
+    bio: String,
+    /// URL of the user's profile picture.
+    profile_picture_url: String,
+    /// Location of the user.
+    location: String,
+}
+
+impl CrudOps for UserProfile {
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let name = "User_Profiles".to_string();
+        let content = String::from(
+            r#"
+            profile_id BIGINT AUTO_INCREMENT UNIQUE,
+            user_id BIGINT,
+            bio TEXT,
+            profile_picture_url TEXT,
+            location TEXT,
+            PRIMARY KEY(profile_id)
+            "#
+        );
+
+        create_table(pool, &name, &content.to_string()).await?;
+
+        println!("Created table: {name}");
+        Ok(())
+    }
+
+    async fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn fill_random(&mut self, pool: &MySqlPool)
+                         -> Result<(), sqlx::Error>
+    {
+        let mut rng = rand::thread_rng();
+
+        // Generate random values.
+        self.user_id = rng.gen_range(1..10000);
+        self.bio = format!("This is a random bio for user {}", rng.gen_range(1..10000));
+        self.profile_picture_url = format!("https://example.com/profile_pictures/user_{}.png", rng.gen_range(1..10000));
+        self.location = format!("Location {}", rng.gen_range(1..100)); // Random location.
+
+        // Insert the new user profile into the database.
+        sqlx::query(
+            r#"
+            INSERT INTO User_Profiles
+            (user_id, bio, profile_picture_url, location)
+            VALUES (?, ?, ?, ?)
+            "#,
+        )
+            .bind(self.user_id)
+            .bind(&self.bio)
+            .bind(&self.profile_picture_url)
+            .bind(&self.location)
             .execute(pool)
             .await?;
 

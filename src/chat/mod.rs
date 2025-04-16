@@ -17,9 +17,18 @@
 //! Main module for chat related structs.
 
 mod user;
+mod channel;
+mod message;
+mod bans;
+mod settings;
+mod logs;
 
-pub use user::User;
-
+pub use user::{User, ChannelUser, UserProfile};
+pub use channel::Channel;
+pub use message::{Message, Reaction};
+pub use bans::Ban;
+pub use settings::{ServerSetting, ChannelSetting, UserSetting};
+pub use logs::Log;
 use crate::db::CrudOps;
 use sqlx::MySqlPool;
 
@@ -33,117 +42,54 @@ use sqlx::MySqlPool;
 /// - `sqlx::Error` - otherwise.
 pub async fn create_db_tables(pool: &MySqlPool) -> Result<(), sqlx::Error> {
     User::create(pool).await?;
-    let mut user = User::default();
-    user.fill_random(pool).await?;
+    Channel::create(pool).await?;
+    Message::create(pool).await?;
+    ChannelUser::create(pool).await?;
+    Ban::create(pool).await?;
+    ServerSetting::create(pool).await?;
+    Log::create(pool).await?;
+    UserProfile::create(pool).await?;
+    Reaction::create(pool).await?;
+    ChannelSetting::create(pool).await?;
+    UserSetting::create(pool).await?;
 
     Ok(())
 }
 
-// TODO: implement structs for these tables:
+/// Fill database tables with random entries.
+///
+/// # Parameters
+/// - `pool` - given MySQL connection pool.
+///
+/// # Returns
+/// - `Ok` - in case of success.
+/// - `sqlx::Error` - otherwise.
+pub async fn fill_db_tables(pool: &MySqlPool, count: u32) -> Result<(), sqlx::Error> {
+    let mut user            = User::default();
+    let mut channel         = Channel::default();
+    let mut message         = Message::default();
+    let mut channel_user    = ChannelUser::default();
+    let mut ban             = Ban::default();
+    let mut server_setting  = ServerSetting::default();
+    let mut log             = Log::default();
+    let mut user_profile    = UserProfile::default();
+    let mut reaction        = Reaction::default();
+    let mut channel_setting = ChannelSetting::default();
+    let mut user_setting    = UserSetting::default();
 
-// CREATE TABLE User (
-// user_id BIGINT AUTO_INCREMENT UNIQUE,
-// username TINYTEXT,
-// password_hash LONGTEXT,
-// email TEXT,
-// created_at DATE,
-// last_login DATE,
-// PRIMARY KEY(user_id)
-// );
+    for _ in 0..count {
+        user.fill_random(pool).await?;
+        channel.fill_random(pool).await?;
+        message.fill_random(pool).await?;
+        channel_user.fill_random(pool).await?;
+        ban.fill_random(pool).await?;
+        server_setting.fill_random(pool).await?;
+        log.fill_random(pool).await?;
+        user_profile.fill_random(pool).await?;
+        reaction.fill_random(pool).await?;
+        channel_setting.fill_random(pool).await?;
+        user_setting.fill_random(pool).await?;
+    }
 
-// CREATE TABLE Channel (
-// channel_id BIGINT AUTO_INCREMENT UNIQUE,
-// channel_name TINYTEXT,
-// topic INTEGER,
-// created_by BIGINT,
-// creator DATE,
-// is_private BOOLEAN,
-// PRIMARY KEY(channel_id)
-// );
-//
-//
-// CREATE TABLE Message (
-// message_id BIGINT AUTO_INCREMENT UNIQUE,
-// channel_id BIGINT,
-// user_id BIGINT,
-// message_text TEXT,
-// timestamp DATE,
-// PRIMARY KEY(message_id)
-// );
-//
-//
-// CREATE TABLE Channel_Users (
-// channel_user_id BIGINT,
-// channel_id BIGINT AUTO_INCREMENT UNIQUE,
-// user_id BIGINT,
-// joined_at DATE,
-// role TEXT,
-// PRIMARY KEY(channel_user_id)
-// );
-//
-//
-// CREATE TABLE Bans (
-// ban_id INTEGER AUTO_INCREMENT UNIQUE,
-// channel_id BIGINT,
-// user_id BIGINT,
-// banned_at DATE,
-// reason TEXT,
-// PRIMARY KEY(ban_id)
-// );
-//
-//
-// CREATE TABLE Server_Settings (
-// setting_id BIGINT AUTO_INCREMENT UNIQUE,
-// settings_name TEXT,
-// settings_value INTEGER,
-// PRIMARY KEY(setting_id)
-// );
-//
-//
-// CREATE TABLE Logs (
-// log_id BIGINT AUTO_INCREMENT UNIQUE,
-// event_type TEXT,
-// user_id BIGINT,
-// channel_id BIGINT,
-// timestamp DATE,
-// details TEXT,
-// PRIMARY KEY(log_id)
-// );
-//
-//
-// CREATE TABLE User_Profiles (
-// profile_id BIGINT AUTO_INCREMENT UNIQUE,
-// user_id BIGINT,
-// bio TEXT,
-// profile_picture_url TEXT,
-// location TEXT,
-// PRIMARY KEY(profile_id)
-// );
-//
-//
-// CREATE TABLE Reactions (
-// reaction_id BIGINT AUTO_INCREMENT UNIQUE,
-// message_id BIGINT,
-// user_id BIGINT,
-// timestamp DATE,
-// reaction_type VARCHAR(255),
-// PRIMARY KEY(reaction_id)
-// );
-//
-//
-// CREATE TABLE Channel_Settings (
-// setting_id BIGINT AUTO_INCREMENT UNIQUE,
-// channel_id BIGINT,
-// setting_name TEXT,
-// setting_value TEXT,
-// PRIMARY KEY(setting_id)
-// );
-//
-//
-// CREATE TABLE User_Settings (
-// settings_id BIGINT AUTO_INCREMENT UNIQUE,
-// user_id BIGINT,
-// settings_name TEXT,
-// settings_value TEXT,
-// PRIMARY KEY(settings_id)
-// );
+    Ok(())
+}
