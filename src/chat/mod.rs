@@ -17,7 +17,24 @@
 //! Main module for chat related structs.
 
 mod user;
+
 pub use user::User;
+
+use crate::db::CrudOps;
+use sqlx::MySqlPool;
+
+/// Create database tables.
+///
+/// # Parameters
+/// - `pool` - given MySQL connection pool.
+///
+/// # Returns
+/// - `Ok` - in case of success.
+/// - `sqlx::Error` - otherwise.
+pub async fn create_db_tables(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+    User::create(pool).await?;
+    Ok(())
+}
 
 // TODO: implement structs for these tables:
 

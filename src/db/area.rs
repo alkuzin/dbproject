@@ -16,7 +16,7 @@
 
 //! Area-specific database manager related declarations.
 
-use crate::{db::ConnectionConfig, chat::User};
+use crate::{db::ConnectionConfig, chat::create_db_tables};
 use sqlx::MySqlPool;
 
 /// Area enumeration.
@@ -36,9 +36,6 @@ pub struct AreaDB {
     config: ConnectionConfig,
     /// Manager area.
     area: Area,
-    // TODO: implement Tables struct to contain chat tables
-    /// "User" database table.
-    user_table: User,
 }
 
 impl AreaDB {
@@ -67,7 +64,10 @@ impl AreaDB {
     /// - `Ok` - in case of success.
     /// - `sqlx::Error` - otherwise.
     pub async fn connect(&mut self, url: &str) -> Result<(), sqlx::Error> {
-        self.pool = Some(MySqlPool::connect(url).await?);
+        let pool = MySqlPool::connect(url).await?;
+        create_db_tables(&pool).await?;
+        self.pool = Some(pool);
+
         Ok(())
     }
 
