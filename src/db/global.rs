@@ -98,13 +98,12 @@ impl GlobalDB {
         self.create_db(&config.database).await?;
 
         let mut manager = area_db;
-        let url = config.url();
+        let url = config.url_db();
         manager.connect(url.as_str()).await?;
 
         self.table.insert(manager.area(), manager);
         Ok(())
     }
-
 
     /// Dump database by specific area.
     ///

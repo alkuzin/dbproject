@@ -44,7 +44,6 @@ async fn setup_db() -> Result<(), sqlx::Error> {
     let russia_area_db = AreaDB::new(rus_area_config, Area::Russia);
     global_db.insert(russia_area_db).await?;
 
-    global_db.dump_db_by_area(&Area::Russia).await?;
     Ok(())
 }
 

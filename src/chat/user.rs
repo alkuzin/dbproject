@@ -16,18 +16,10 @@
 
 //! User related structs.
 
-use crate::db::CrudOps;
+use crate::db::{create_table, CrudOps};
+use chrono::NaiveDate;
 use sqlx::MySqlPool;
-
-// CREATE TABLE User (
-// user_id BIGINT AUTO_INCREMENT UNIQUE,
-// username TINYTEXT,
-// password_hash LONGTEXT,
-// email TEXT,
-// created_at DATE,
-// last_login DATE,
-// PRIMARY KEY(user_id)
-// );
+use rand::Rng;
 
 /// User table.
 #[derive(Debug, Default)]
@@ -41,22 +33,68 @@ pub struct User {
     /// User email.
     email: String,
     /// User creation time.
-    created_at: Option<chrono::NaiveDate>,
+    created_at: Option<NaiveDate>,
     /// User last login time.
-    last_login: Option<chrono::NaiveDate>,
+    last_login: Option<NaiveDate>,
 }
 
-// TODO: complete.
 impl CrudOps for User {
-    fn create(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let name = "User".to_string();
+        let content = String::from(
+            r#"
+            user_id BIGINT AUTO_INCREMENT UNIQUE,
+            username TINYTEXT,
+            password_hash LONGTEXT,
+            email TEXT,
+            created_at DATE,
+            last_login DATE,
+            PRIMARY KEY(user_id)
+            "#
+        );
+
+        create_table(pool, &name, &content.to_string()).await?;
+
+        println!("Created table: User");
+        Ok(())
+    }
+
+    async fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
         todo!()
     }
 
-    fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+    async fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
         todo!()
     }
 
-    fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
-        todo!()
+    async fn fill_random(&mut self, pool: &MySqlPool)
+        -> Result<(), sqlx::Error>
+    {
+        let mut rng = rand::thread_rng();
+
+        // Generate random values.
+        self.username      = format!("user_{}", rng.gen_range(1..10000));
+        self.password_hash = format!("hash_{}", rng.gen_range(1..10000));
+        self.email         = format!("user{}@example.com", rng.gen_range(1..10000));
+        self.created_at    = Some(NaiveDate::from_ymd_opt(2025, 1, 1).unwrap());
+        self.last_login    = Some(NaiveDate::from_ymd_opt(2025, 1, 2).unwrap());
+
+        // Insert the new user into the database.
+        sqlx::query(
+            r#"
+            INSERT INTO User
+            (username, password_hash, email, created_at, last_login)
+            VALUES (?, ?, ?, ?, ?)
+            "#,
+        )
+            .bind(&self.username)
+            .bind(&self.password_hash)
+            .bind(&self.email)
+            .bind(self.created_at.unwrap().to_string())
+            .bind(self.last_login.unwrap().to_string())
+            .execute(pool)
+            .await?;
+
+        Ok(())
     }
 }

@@ -100,6 +100,7 @@ pub trait CrudOps {
     async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error>;
     async fn update(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
     async fn delete(&self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
+    async fn fill_random(&mut self, pool: &MySqlPool) -> Result<(), sqlx::Error>;
 }
 
 /// Dump database into specific file.

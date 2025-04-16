@@ -33,6 +33,9 @@ use sqlx::MySqlPool;
 /// - `sqlx::Error` - otherwise.
 pub async fn create_db_tables(pool: &MySqlPool) -> Result<(), sqlx::Error> {
     User::create(pool).await?;
+    let mut user = User::default();
+    user.fill_random(pool).await?;
+
     Ok(())
 }
 
