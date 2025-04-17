@@ -168,3 +168,20 @@ pub async fn create_table(pool: &MySqlPool, name: &String, content: &String)
 
     Ok(())
 }
+
+/// Create new database.
+///
+/// # Parameters
+/// - `pool` - given MySQL connection pool.
+/// - `name` - given database name.
+///
+/// # Returns
+/// - `Ok` - in case of success.
+/// - `sqlx::Error` - otherwise.
+pub async fn create_db(pool: &MySqlPool, name: &String) -> Result<(), sqlx::Error> {
+    // Create database if not exists.
+    let query = format!("CREATE DATABASE IF NOT EXISTS {}", name);
+    sqlx::query(query.as_str()).execute(pool).await?;
+
+    Ok(())
+}

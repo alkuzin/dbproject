@@ -26,7 +26,19 @@ pub enum Area {
     #[default]
     Unknown,
     Russia,
+    Usa,
 }
+
+impl Area {
+    pub fn to_string(&self) -> String {
+        match self {
+            Area::Russia  => "Russia".to_string(),
+            Area::Usa     => "USA".to_string(),
+            Area::Unknown => "".to_string(),
+        }
+    }
+}
+
 
 /// Area-specific database manager.
 #[derive(Debug, Default)]

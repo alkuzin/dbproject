@@ -44,6 +44,15 @@ async fn setup_db() -> Result<(), sqlx::Error> {
     let russia_area_db = AreaDB::new(rus_area_config, Area::Russia);
     global_db.insert(russia_area_db).await?;
 
+    let mut usa_area_config  = global_config.clone();
+    usa_area_config.database = "AreaDB_USA".to_string();
+
+    let usa_area_db = AreaDB::new(usa_area_config, Area::Usa);
+    global_db.insert(usa_area_db).await?;
+
+    global_db.test_procedures().await?;
+    global_db.test_requests().await?;
+
     Ok(())
 }
 

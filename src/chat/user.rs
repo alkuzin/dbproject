@@ -22,20 +22,20 @@ use sqlx::MySqlPool;
 use rand::Rng;
 
 /// User table.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, sqlx::FromRow)]
 pub struct User {
     /// User identifier.
-    user_id: i64,
+    pub user_id: i64,
     /// Name of the user.
-    username: String,
+    pub username: String,
     /// Password hash in string representation.
-    password_hash: String,
+    pub password_hash: String,
     /// User email.
-    email: String,
+    pub email: String,
     /// User creation time.
-    created_at: Option<NaiveDate>,
+    pub created_at: Option<NaiveDate>,
     /// User last login time.
-    last_login: Option<NaiveDate>,
+    pub last_login: Option<NaiveDate>,
 }
 
 impl CrudOps for User {
