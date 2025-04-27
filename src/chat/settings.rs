@@ -218,3 +218,193 @@ impl CrudOps for UserSetting {
         Ok(())
     }
 }
+
+
+
+
+
+/// ServerSettingKV table.
+#[derive(Debug, Default)]
+pub struct ServerSettingKV {
+    /// Name of the setting.
+    settings_name: String,
+    /// Value of the setting.
+    settings_value: String,
+}
+
+impl CrudOps for ServerSettingKV {
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let name = "Server_Settings_KV".to_string();
+        let content = String::from(
+            r#"
+            setting_name VARCHAR(255),
+            setting_value VARCHAR(255),
+            PRIMARY KEY(setting_name)
+            "#
+        );
+
+        create_table(pool, &name, &content.to_string()).await?;
+
+        println!("Created table: {name}");
+        Ok(())
+    }
+
+    async fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn fill_random(&mut self, pool: &MySqlPool)
+        -> Result<(), sqlx::Error>
+    {
+        let mut rng = rand::thread_rng();
+
+        // Generate random values.
+        self.settings_name  = format!("setting_{}", rng.gen_range(1..10000));
+        self.settings_value = format!("setting_val_{}", rng.gen_range(1..10000));
+
+        // Insert the new server setting into the database.
+        sqlx::query(
+            r#"
+            INSERT INTO Server_Settings_KV
+            (setting_name, setting_value)
+            VALUES (?, ?)
+            "#,
+        )
+            .bind(&self.settings_name)
+            .bind(&self.settings_value)
+            .execute(pool)
+            .await?;
+
+        Ok(())
+    }
+}
+
+/// ChannelSettingKV table.
+#[derive(Debug, Default)]
+pub struct ChannelSettingKV {
+    /// Channel identifier.
+    channel_id: i64,
+    /// Name of the setting.
+    settings_name: String,
+    /// Value of the setting.
+    settings_value: String,
+}
+
+impl CrudOps for ChannelSettingKV {
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let name = "Channel_Settings_KV".to_string();
+        let content = String::from(
+            r#"
+            channel_id BIGINT AUTO_INCREMENT UNIQUE,
+            setting_name VARCHAR(255),
+            setting_value VARCHAR(255),
+            PRIMARY KEY(channel_id, setting_name)
+            "#
+        );
+
+        create_table(pool, &name, &content.to_string()).await?;
+
+        println!("Created table: {name}");
+        Ok(())
+    }
+
+    async fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn fill_random(&mut self, pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let mut rng = rand::thread_rng();
+
+        // Generate random values.
+        self.channel_id     = rng.gen_range(1..100);
+        self.settings_name  = format!("setting_{}", rng.gen_range(1..10000));
+        self.settings_value = format!("setting_val_{}", rng.gen_range(1..10000));
+
+        // Insert the new server setting into the database.
+        sqlx::query(
+            r#"
+            INSERT INTO Channel_Settings_KV
+            (channel_id, setting_name, setting_value)
+            VALUES (?, ?, ?)
+            "#,
+        )
+            .bind(&self.channel_id)
+            .bind(&self.settings_name)
+            .bind(&self.settings_value)
+            .execute(pool)
+            .await?;
+
+        Ok(())
+    }
+}
+
+/// UserSettingKV table.
+#[derive(Debug, Default)]
+pub struct UserSettingKV {
+    /// Channel identifier.
+    pub user_id: i64,
+    /// Name of the setting.
+    pub settings_name: String,
+    /// Value of the setting.
+    pub settings_value: String,
+}
+
+impl CrudOps for UserSettingKV {
+    async fn create(pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let name = "User_Settings_KV".to_string();
+        let content = String::from(
+            r#"
+            user_id BIGINT AUTO_INCREMENT UNIQUE,
+            setting_name VARCHAR(255),
+            setting_value VARCHAR(255),
+            PRIMARY KEY(user_id, setting_name)
+            "#
+        );
+
+        create_table(pool, &name, &content.to_string()).await?;
+
+        println!("Created table: {name}");
+        Ok(())
+    }
+
+    async fn update(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn delete(&self, _pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        todo!()
+    }
+
+    async fn fill_random(&mut self, pool: &MySqlPool) -> Result<(), sqlx::Error> {
+        let mut rng = rand::thread_rng();
+
+        // Generate random values.
+        self.user_id        = rng.gen_range(1..100);
+        self.settings_name  = format!("setting_{}", rng.gen_range(1..10000));
+        self.settings_value = format!("setting_val_{}", rng.gen_range(1..10000));
+
+        // Insert the new server setting into the database.
+        sqlx::query(
+            r#"
+            INSERT INTO User_Settings_KV
+            (user_id, setting_name, setting_value)
+            VALUES (?, ?, ?)
+            "#,
+        )
+            .bind(&self.user_id)
+            .bind(&self.settings_name)
+            .bind(&self.settings_value)
+            .execute(pool)
+            .await?;
+
+        Ok(())
+    }
+}

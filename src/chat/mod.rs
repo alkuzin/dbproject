@@ -27,7 +27,10 @@ pub use user::{User, ChannelUser, UserProfile};
 pub use channel::Channel;
 pub use message::{Message, Reaction};
 pub use bans::Ban;
-pub use settings::{ServerSetting, ChannelSetting, UserSetting};
+pub use settings::{
+    ServerSetting, ChannelSetting, UserSetting,
+    ChannelSettingKV, ServerSettingKV, UserSettingKV
+};
 pub use logs::Log;
 use crate::db::CrudOps;
 use sqlx::MySqlPool;
@@ -53,6 +56,10 @@ pub async fn create_db_tables(pool: &MySqlPool) -> Result<(), sqlx::Error> {
     ChannelSetting::create(pool).await?;
     UserSetting::create(pool).await?;
 
+    ServerSettingKV::create(pool).await?;
+    ChannelSettingKV::create(pool).await?;
+    UserSettingKV::create(pool).await?;
+
     Ok(())
 }
 
@@ -77,6 +84,10 @@ pub async fn fill_db_tables(pool: &MySqlPool, count: u32) -> Result<(), sqlx::Er
     let mut channel_setting = ChannelSetting::default();
     let mut user_setting    = UserSetting::default();
 
+    let mut server_setting_kv  = ServerSettingKV::default();
+    let mut channel_setting_kv = ChannelSettingKV::default();
+    let mut user_setting_kv    = UserSettingKV::default();
+
     for _ in 0..count {
         user.fill_random(pool).await?;
         channel.fill_random(pool).await?;
@@ -89,6 +100,10 @@ pub async fn fill_db_tables(pool: &MySqlPool, count: u32) -> Result<(), sqlx::Er
         reaction.fill_random(pool).await?;
         channel_setting.fill_random(pool).await?;
         user_setting.fill_random(pool).await?;
+
+        server_setting_kv.fill_random(pool).await?;
+        channel_setting_kv.fill_random(pool).await?;
+        user_setting_kv.fill_random(pool).await?;
     }
 
     Ok(())

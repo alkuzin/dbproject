@@ -18,6 +18,7 @@
 
 use crate::db::{create_table, CrudOps};
 use chrono::NaiveDate;
+use serde_json::json;
 use sqlx::MySqlPool;
 use rand::Rng;
 
@@ -178,15 +179,17 @@ impl CrudOps for ChannelUser {
 #[derive(Debug, Default)]
 pub struct UserProfile {
     /// Profile identifier.
-    profile_id: i64,
+    pub profile_id: i64,
     /// User identifier associated with the profile.
-    user_id: i64,
+    pub user_id: i64,
     /// Biography of the user.
-    bio: String,
+    pub bio: String,
     /// URL of the user's profile picture.
-    profile_picture_url: String,
+    pub profile_picture_url: String,
     /// Location of the user.
-    location: String,
+    pub location: String,
+    /// JSON data containing flexible profile information.
+    pub profile_data: serde_json::Value,
 }
 
 impl CrudOps for UserProfile {
@@ -199,6 +202,7 @@ impl CrudOps for UserProfile {
             bio TEXT,
             profile_picture_url TEXT,
             location TEXT,
+            profile_data JSON,
             PRIMARY KEY(profile_id)
             "#
         );
@@ -218,7 +222,7 @@ impl CrudOps for UserProfile {
     }
 
     async fn fill_random(&mut self, pool: &MySqlPool)
-                         -> Result<(), sqlx::Error>
+        -> Result<(), sqlx::Error>
     {
         let mut rng = rand::thread_rng();
 
@@ -228,18 +232,26 @@ impl CrudOps for UserProfile {
         self.profile_picture_url = format!("https://example.com/profile_pictures/user_{}.png", rng.gen_range(1..10000));
         self.location = format!("Location {}", rng.gen_range(1..100)); // Random location.
 
+        // Create a JSON object for profile_data.
+        self.profile_data = json!({
+            "bio":                  &self.bio,
+            "profile_picture_url":  &self.profile_picture_url,
+            "location":             &self.location,
+        });
+
         // Insert the new user profile into the database.
         sqlx::query(
             r#"
             INSERT INTO User_Profiles
-            (user_id, bio, profile_picture_url, location)
-            VALUES (?, ?, ?, ?)
+            (user_id, bio, profile_picture_url, location, profile_data)
+            VALUES (?, ?, ?, ?, ?)
             "#,
         )
             .bind(self.user_id)
             .bind(&self.bio)
             .bind(&self.profile_picture_url)
             .bind(&self.location)
+            .bind(&self.profile_data)
             .execute(pool)
             .await?;
 

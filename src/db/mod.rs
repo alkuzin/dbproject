@@ -21,6 +21,8 @@ use sqlx::MySqlPool;
 
 pub mod global;
 pub mod area;
+pub mod docdb;
+pub mod kvdb;
 
 /// MySQL connection config struct.
 #[derive(Debug, Default, Clone)]

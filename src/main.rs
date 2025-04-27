@@ -16,49 +16,32 @@
 
 mod chat;
 mod db;
-
-use db::{ConnectionConfig, global::GlobalDB, area::{Area, AreaDB}};
-
-/// Setup database managers.
-///
-/// # Returns
-/// - `Ok` - in case of success.
-/// - `sqlx::Error` - otherwise.
-async fn setup_db() -> Result<(), sqlx::Error> {
-    let global_config = ConnectionConfig::new(
-        "test".to_string(),
-        "12345".to_string(),
-        "localhost".to_string(),
-        3306,
-        "".to_string(),
-    );
-
-    // Set global database manager.
-    let mut global_db = GlobalDB::new();
-    global_db.connect(&global_config).await?;
-
-    let mut rus_area_config  = global_config.clone();
-    rus_area_config.database = "AreaDB_Russia".to_string();
-
-    // Set area-specific database managers.
-    let russia_area_db = AreaDB::new(rus_area_config, Area::Russia);
-    global_db.insert(russia_area_db).await?;
-
-    let mut usa_area_config  = global_config.clone();
-    usa_area_config.database = "AreaDB_USA".to_string();
-
-    let usa_area_db = AreaDB::new(usa_area_config, Area::Usa);
-    global_db.insert(usa_area_db).await?;
-
-    global_db.test_procedures().await?;
-    global_db.test_requests().await?;
-
-    Ok(())
-}
+mod task1;
+mod task2;
+mod task3;
 
 #[tokio::main]
 async fn main() {
-    if let Err(err) = setup_db().await {
-        eprintln!("Error: {err}");
+    let task = 3;
+
+    match task {
+        1 => {
+            if let Err(err) = task1::setup_db().await {
+                eprintln!("Error: {err}");
+            }
+        }
+        2 => {
+            if let Err(err) = task2::setup_db().await {
+                eprintln!("Error: {err}");
+            }
+        }
+        3 => {
+            if let Err(err) = task3::setup_db().await {
+                eprintln!("Error: {err}");
+            }
+        }
+        _ => {
+            eprintln!("Incorrect task: {task}");
+        }
     }
 }

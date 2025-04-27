@@ -20,6 +20,7 @@ use crate::db::{create_table, CrudOps};
 use chrono::NaiveDateTime;
 use sqlx::MySqlPool;
 use rand::Rng;
+use serde_json::json;
 
 /// Message table.
 #[derive(Debug, Default)]
@@ -34,6 +35,8 @@ pub struct Message {
     message_text: String,
     /// Timestamp of when the message was sent.
     timestamp: Option<NaiveDateTime>,
+    /// JSON data containing flexible profile information.
+    message_data: serde_json::Value,
 }
 
 impl CrudOps for Message {
@@ -46,6 +49,7 @@ impl CrudOps for Message {
             user_id BIGINT,
             message_text TEXT,
             timestamp DATETIME,
+            message_data JSON,
             PRIMARY KEY(message_id)
             "#
         );
@@ -75,18 +79,27 @@ impl CrudOps for Message {
         self.message_text = format!("This is a random message {}", rng.gen_range(1..10000));
         self.timestamp = Some(NaiveDateTime::from_timestamp(chrono::Utc::now().timestamp(), 0));
 
+        // Create a JSON object for message_data.
+        self.message_data = json!({
+            "message_text": &self.message_text,
+            "timestamp":    self.timestamp.map(|t| t.to_string()),
+            "channel_id":   self.channel_id,
+            "user_id":      self.user_id,
+        });
+
         // Insert the new message into the database.
         sqlx::query(
             r#"
             INSERT INTO Message
-            (channel_id, user_id, message_text, timestamp)
-            VALUES (?, ?, ?, ?)
+            (channel_id, user_id, message_text, timestamp, message_data)
+            VALUES (?, ?, ?, ?, ?)
             "#,
         )
             .bind(self.channel_id)
             .bind(self.user_id)
             .bind(&self.message_text)
             .bind(self.timestamp.unwrap().to_string())
+            .bind(&self.message_data)
             .execute(pool)
             .await?;
 
