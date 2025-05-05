@@ -19,6 +19,7 @@
 use std::{process::Command, io};
 use sqlx::MySqlPool;
 
+pub mod blockchain;
 pub mod global;
 pub mod area;
 pub mod docdb;

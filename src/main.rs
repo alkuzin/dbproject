@@ -19,10 +19,11 @@ mod db;
 mod task1;
 mod task2;
 mod task3;
+mod task4;
 
 #[tokio::main]
 async fn main() {
-    let task = 3;
+    let task = 4;
 
     match task {
         1 => {
@@ -37,6 +38,11 @@ async fn main() {
         }
         3 => {
             if let Err(err) = task3::setup_db().await {
+                eprintln!("Error: {err}");
+            }
+        }
+        4 => {
+            if let Err(err) = task4::setup_db().await {
                 eprintln!("Error: {err}");
             }
         }
